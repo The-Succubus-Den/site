@@ -19,16 +19,19 @@
 <meta property="og:image:height" content="810">
 <meta property="og:image:alt" content="Inside The Succubus Den">
 <meta name="twitter:card" content="summary_large_image">
+<!-- the two faces seen first are preloaded: Libron for the body text and the latin subset of Cormorant Garamond for the headings -->
 <link rel="preload" href="fonts/Libron-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/CormorantGaramond-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="logo/favicon-64.png" type="image/png" sizes="64x64">
 <link rel="apple-touch-icon" href="logo/apple-touch-icon.png">
+<!-- Bebas Neue and IBM Plex Mono still come from Google Fonts; the preconnects open both of its hosts early -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- on the main page the build puts the intro's first-paint check here (INTRO_HEAD in parts/build.py); other pages get nothing -->
 <style>
   /* Cormorant Garamond (OFL) for headings and wordmarks: the Google Fonts files, self-hosted in fonts/ and preloaded, so
-     there is no third-party request. Its own metrics sit the capitals well inside the line box, so it needs no
+     the heading face needs no third-party request. Its own metrics sit the capitals well inside the line box, so it needs no
      ascent/descent overrides and renders the same in Safari (which ignores them) as in Chrome. Two subsets: latin and latin-ext */
   @font-face{font-family:"Cormorant Den";font-weight:400;font-style:normal;font-display:swap;
     src:url("fonts/CormorantGaramond-latin.woff2") format("woff2");
@@ -87,12 +90,15 @@
      3:1 is the minimum for a focus indicator */
   .light :focus-visible{outline-color:var(--violet-ink)}
   .red :focus-visible{outline-color:var(--pale-bright)}
+  /* the skip link: parked above the top edge, it slides into view only when it takes keyboard focus */
   .skip{position:fixed;left:14px;top:14px;z-index:300;transform:translateY(-180%);background:var(--pale);color:var(--violet-ink);
     padding:11px 16px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;
     transition:transform .25s var(--ease)}
   .skip:focus{transform:none}
+  /* hidden on screen, still read by screen readers */
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   [id]{scroll-margin-top:16px}   /* the header scrolls away with the page, so anchor targets only need a little room at the top edge */
+  /* the micro-label style (hours, handles, tags): small spaced capitals in IBM Plex Mono */
   .mono{font-family:var(--mono);font-size:var(--fs-mono);letter-spacing:.14em;text-transform:uppercase;font-weight:400}
 
   /* ---------- surfaces: the coloured fields a section can sit on (dark, light, red, violet) ---------- */
@@ -104,7 +110,8 @@
      so the hue stays and the field deepens (Pearl type: 13.1:1 and 9.1:1). The NSFW services card keeps full Magenta */
   .services.violet{background:#4D007C}
   .casino.red{background:#8E0060}
-  /* on the coloured fields the Hot Pink accent and the muted ink lose contrast, so both become full Pearl there */
+  /* on the coloured fields the Hot Pink accent loses contrast (2.7:1 on Deep Violet), so it becomes full Pearl there; on
+     Magenta the muted ink becomes full Pearl too. On Deep Violet the muted ink stays, at 5.8:1 */
   .violet,.panel{--accent:var(--pale-bright)}
   .red{--accent:var(--pale-bright);--mute:var(--pale-bright)}
   .red :focus-visible{outline-color:var(--pale-bright)}
@@ -134,7 +141,7 @@
   .hud__mark .sdlogo{width:auto;height:clamp(44px,4vw,62px);flex:none;transition:transform .5s var(--ease)}
   .hud__mark:hover .sdlogo{transform:scale(1.06)}
   /* the animated logo: a looping video wherever the logo appears. Its poster (the first frame) stands in without
-     script, under reduced motion, or when the browser refuses to autoplay. WebKit shows no WebM transparency, so it gets
+     script and under reduced motion; where the browser refuses to autoplay, the script swaps in the animated AVIF cut. WebKit shows no WebM transparency, so it gets
      the MP4 on black, laid over the page with a screen blend that drops the black out */
   .sdlogo{display:block;object-fit:contain;background:transparent}
   /* a blend only reaches what is painted in the same stacking context, so the screen blend goes on the outermost layer
@@ -142,6 +149,8 @@
   .sdlogo.is-screen,.hero__logo.is-screen,.intro__vid.is-screen{mix-blend-mode:screen}
   /* on the main page the big logo stands alone in the middle of the hero, so the header's small logo is hidden there */
   .page-home .hud__mark{display:none}
+  /* the big logo's slot: it takes whatever height the hero has left between the top row and the title, and the logo
+     sits centred inside it at its own 1168:1020 shape */
   .hero__logo{position:relative;z-index:3;flex:1 1 0;min-height:clamp(120px,22vh,340px);margin:clamp(6px,1.5vh,18px) 0}
   .hero__logo .sdlogo{position:absolute;inset:0;margin:auto;height:100%;max-height:560px;width:auto;max-width:100%;aspect-ratio:1168/1020}
   /* a soft black glow behind the hero logo, shaped like it: the logo's own transparent still, turned black and blurred,
@@ -199,6 +208,7 @@
   /* ---------- the 404: a dark room, the code as a neon sign, the way back, and a list of every room ---------- */
   .lost{position:relative;overflow:hidden;min-height:calc(100svh - 96px);display:flex;flex-direction:column;justify-content:center;
     align-items:flex-start;padding:clamp(36px,7vh,90px) var(--gutter) calc(clamp(48px,8vh,100px) + 80px + env(safe-area-inset-bottom))}
+  /* a soft Electric Purple glow rising from the bottom right corner */
   .lost::before{content:"";position:absolute;right:-12%;bottom:-28%;width:min(90vw,1100px);aspect-ratio:1;pointer-events:none;
     background:radial-gradient(closest-side,rgba(169,0,201,.32),rgba(101,0,168,.12) 55%,rgba(53,0,79,0))}
   .lost > *{position:relative}
@@ -229,21 +239,24 @@
     transition:background .3s,border-color .3s,box-shadow .3s}
   /* it stays in the hero; the script fades it out (inline opacity) as it nears the top edge, then hides it */
   .hud__menu.is-away{visibility:hidden}
+  /* the gloss: a white sheen across the top of the pill that fades out by its middle */
   .hud__menu::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
     background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.03) 26%,rgba(255,255,255,0) 44%)}
   /* the inner rim: a hairline ring and a faint inner glow. No backdrop filter on this layer: it brightened the pill's fill
      beyond the corner button's */
   .hud__menu::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
     box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.24),inset 0 0 8px rgba(255,255,255,.07)}
-  .hud__menu > *{position:relative;z-index:1}
+  .hud__menu > *{position:relative;z-index:1}   /* the label and icon sit above the gloss and the rim */
   .hud__menu:hover,.hud__menu:focus-visible{background:linear-gradient(180deg,rgba(169,0,201,.94),rgba(101,0,168,.96));
     border-color:var(--pale-bright)}
   .hud__menu svg{width:15px;height:15px;fill:currentColor;transition:transform .45s var(--ease)}
-  .hud__menu[aria-expanded="true"] svg{transform:rotate(90deg)}
+  .hud__menu[aria-expanded="true"] svg{transform:rotate(90deg)}   /* the grid icon turns a quarter while the menu is open */
   .hud__menu span{position:relative}
 
   /* the corner Aethernet button, parked bottom right on every page. On the main page it fades in once the hero's button
      has left the screen and fades out when it comes back; elsewhere it is always on. The script only toggles .is-on */
+  /* the same glossy pill as the hero's button, parked --park from the corner and clear of the iPhone home bar; hidden
+     until .is-on */
   .menubar{--park:clamp(14px,2.5vw,28px);position:fixed;z-index:98;right:var(--park);bottom:calc(var(--park) + env(safe-area-inset-bottom));
     display:inline-flex;align-items:center;justify-content:center;gap:11px;
     font-family:var(--mono);font-size:clamp(14px,1.35vw,19px);font-weight:500;letter-spacing:.16em;text-transform:uppercase;
@@ -265,6 +278,7 @@
   .menubar svg{width:15px;height:15px;fill:currentColor;transition:transform .45s var(--ease)}
   .menubar[aria-expanded="true"] svg{transform:rotate(90deg)}
 
+  /* while the menu panel or the court photo viewer is open, the corner button steps out of the way */
   body.is-locked .menubar{opacity:0;pointer-events:none}
 
   /* the Aethernet menu panel: slides in from the right edge, with the page links, the Discord invite, the address and
@@ -287,6 +301,7 @@
     font-family:var(--face);font-size:min(clamp(32px,4.4vw,54px),max(26px,4.6vh));line-height:1.12;padding:6px 0;border-bottom:1px solid var(--line);
     transition:color .3s,padding-left .4s var(--ease)}
   .panel__list a:hover,.panel__list a:focus-visible{color:var(--accent);padding-left:10px}
+  /* each page's tag (Menu, Succubi, Casino…), small and to the right of its name */
   .panel__list span{font-family:var(--mono);font-size:12px;letter-spacing:.14em;opacity:.92;text-transform:uppercase}
   .panel__foot{display:flex;flex-direction:column;gap:14px;margin-top:34px}
   /* the links already size by screen height as well as width; under 800px tall the rows, the footer gap and the notice
@@ -343,6 +358,7 @@
     color:var(--pale);text-align:center;
     /* the name is narrower than the frame; the script fits its font size to this width */
     flex:none;width:min(100%,64%)}
+  /* the hero's top row: the opening sentence and the hours on the left, the address on the right (stacked on phones) */
     .hero__ui{position:relative;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
   /* ---------- the name as a neon sign ----------
      Each word draws two copies of itself behind the Pearl letters: ::before is the glow, ::after the Hot Pink tube (a
@@ -374,6 +390,7 @@
   @keyframes neonBuzz{
     0%{opacity:1} 71%{opacity:.35} 72%{opacity:1} 73.5%{opacity:.55} 74.5%{opacity:1} 88%{opacity:.8} 88.6%{opacity:1} 100%{opacity:1}
   }
+  /* the address line at the top right of the hero, in mono */
   .hero__line{display:flex;flex-wrap:wrap;gap:6px 22px;font-family:var(--mono);font-size:var(--fs-mono);letter-spacing:.13em;text-transform:uppercase;text-wrap:balance;text-shadow:0 1px 14px rgba(20,0,32,.6)}
   .hero__what{font-family:var(--text);font-size:clamp(18px,1.4vw,21px);line-height:1.3;letter-spacing:0;text-transform:none;
     max-width:34ch;margin-top:12px;color:var(--pale)}
@@ -412,24 +429,28 @@
   .ticker{position:relative;z-index:4;display:flex;align-items:stretch;flex:none;
     margin:0 calc(-1 * var(--gutter)) calc(-1 * var(--gutter));height:clamp(44px,5.4vh,54px);
     background:var(--pale);color:var(--ground);box-shadow:0 -10px 30px rgba(13,0,20,.35)}
-  .ticker:focus{outline:none}
+  .ticker:focus{outline:none}   /* the main page's skip link lands here (tabindex -1), so it takes focus without a ring */
+  /* the moving text fades out at both ends of the strip */
   .ticker__view{flex:1 1 auto;min-width:0;overflow:hidden;display:flex;align-items:center;
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 clamp(16px,3vw,48px),#000 calc(100% - clamp(16px,3vw,48px)),transparent 100%);
     mask-image:linear-gradient(90deg,transparent 0,#000 clamp(16px,3vw,48px),#000 calc(100% - clamp(16px,3vw,48px)),transparent 100%)}
   .ticker__track{display:flex;flex:none;width:max-content;will-change:transform}
   .ticker__set,.ticker__group{display:flex;flex:none;align-items:center;white-space:nowrap}
+  /* the script sets .is-running once the loop is built, and --tdur so the pace stays the same at every width */
   .ticker.is-running .ticker__track{animation:tickerRun var(--tdur,60s) linear infinite}
   .ticker.is-paused .ticker__track,.ticker:focus-within .ticker__track{animation-play-state:paused}
   @media (hover:hover){ .ticker:hover .ticker__track{animation-play-state:paused} }
   @keyframes tickerRun{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
   .ticker__text{font-family:var(--text);font-size:clamp(16px,1.2vw,18px);line-height:1}
   .ticker__mono{font-family:var(--mono);font-size:var(--fs-mono);letter-spacing:.14em;text-transform:uppercase}
+  /* the small Hot Pink diamonds between the welcome and the list */
   .ticker__sep{display:block;flex:none;width:7px;height:7px;margin:0 clamp(18px,2.2vw,34px);background:var(--red);transform:rotate(45deg)}
   .ticker__toggle{flex:none;display:grid;place-items:center;width:clamp(44px,5.4vh,54px);padding:0;border:0;
     border-left:1px solid var(--line-dark);background:transparent;color:var(--ground);cursor:pointer}
   .ticker__toggle svg{width:13px;height:13px;fill:currentColor}
   .ticker__toggle:hover{background:rgba(53,0,79,.07)}
   .ticker__toggle:focus-visible{outline:2px solid var(--violet-ink);outline-offset:-4px}
+  /* the toggle shows the pause icon while the ticker runs and the play icon while it is paused */
   .ticker__play,.ticker.is-paused .ticker__pause{display:none}
   .ticker.is-paused .ticker__play{display:block}
   @media (prefers-reduced-motion:reduce){
@@ -447,6 +468,7 @@
   @media (max-width:860px){.sec__head{grid-template-columns:1fr;gap:22px;align-items:start}}
 
   /* ---------- the bar: the drinks list, then feature rows (name, price, description) for the buyout, body shots and games ---------- */
+  /* a feature row: the name on the left, the price on the right, the description full width below */
   .feature{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px clamp(16px,3vw,40px);padding:clamp(22px,2.6vw,34px) 0;
     border-top:1px solid var(--line);align-items:baseline}
   .feature:last-of-type{border-bottom:1px solid var(--line)}
@@ -458,6 +480,7 @@
   /* the drinks list and, to its right, the slot for a photo of the bar */
   .drinks-wrap{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:clamp(28px,4vw,64px);align-items:start;
     margin-top:clamp(56px,9vh,100px)}
+  /* the photo slot stays in view beside the list as it scrolls; from 900px down it sits in the flow under the list */
   .drinks__ph{margin:0;position:sticky;top:clamp(20px,4vh,40px);display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:12px;aspect-ratio:4/5;width:100%;max-width:520px;background:var(--violet);border:1px solid var(--line);color:var(--pale)}
   .drinks__ph .sdlogo{width:clamp(110px,12vw,170px);height:auto}
@@ -468,6 +491,7 @@
   }
   .drinks__head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;margin-bottom:8px}
   .drinks__head h3{font-size:var(--fs-h3)}
+  /* a drink: name, description and price on one row; on phones the description drops below the name and price */
   .drink{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1.6fr) auto;gap:clamp(12px,3vw,40px);
     padding:20px 0;border-top:1px solid var(--line);align-items:baseline;text-decoration:none;
     transition:color .3s var(--ease),padding-left .4s var(--ease)}
@@ -475,6 +499,7 @@
   .drink__name{font-family:var(--face);font-size:clamp(24px,2.4vw,36px);line-height:1;text-transform:uppercase}
   .drink__desc{font-size:16px;line-height:1.4;opacity:.8;max-width:60ch}
   .drink__price{font-family:var(--mono);font-size:clamp(17px,1.35vw,21px);letter-spacing:.06em}
+  /* the small print under a list ("All prices in gil…"), in the muted ink after a short rule */
   .note{margin-top:clamp(28px,4vh,48px);display:flex;gap:14px;align-items:baseline;color:var(--mute);max-width:70ch}
   .note::before{content:"";width:22px;height:1px;background:currentColor;flex:none;transform:translateY(-4px)}
   @media (max-width:760px){
@@ -488,6 +513,7 @@
   .svc__card{padding:clamp(20px,2.4vw,34px);background:rgba(255,255,255,.05);display:flex;flex-direction:column;gap:18px}
   .svc__tag{display:flex;align-items:center;gap:10px;font-family:var(--face);font-size:clamp(19px,1.7vw,24px);
     letter-spacing:.06em;text-transform:uppercase;line-height:1}
+  /* the dot before each card's title: Pearl for SFW, Hot Pink for NSFW */
   .svc__tag i{width:7px;height:7px;border-radius:50%;background:var(--sfw);flex:none}
   
   .svc__tag--nsfw i{background:var(--nsfw)}
@@ -519,6 +545,7 @@
     gap:clamp(12px,3vw,40px);padding:clamp(16px,2.2vw,28px) 0;transition:color .35s var(--ease)}
   .court summary::-webkit-details-marker{display:none}
   .court__head{display:flex;flex-direction:column;gap:7px;min-width:0}
+  /* the one-line teaser under each court's name, in muted mono */
   .court__tease{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;line-height:1.45;color:var(--mute)}
   /* ---------- court photos are polaroids: every one, closed and open, phone and desktop ----------
      A Pearl paper frame with a deeper bottom edge and the court's first name written on it. The small ones beside the
@@ -552,12 +579,14 @@
   .court__wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .46s cubic-bezier(.33,.8,.28,1)}
   .court[open]:not(.is-closing) .court__wrap{grid-template-rows:1fr}
   .court.is-closing .court__wrap{grid-template-rows:0fr;transition-duration:.34s}
+  /* the Hot Pink dot before each court's row, which swells as the row is hovered */
   .court summary::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--nsfw);flex:none;transition:transform .4s var(--ease)}
   .court summary:hover{color:var(--accent)}
   .court summary:hover::before{transform:scale(1.6)}
   .court__name{font-family:var(--face);font-size:clamp(34px,3.6vw,48px);   /* court names grow with the screen but stop at 48px */
    line-height:.86;text-transform:uppercase;
     display:flex;gap:clamp(10px,2vw,24px);align-items:baseline;flex-wrap:wrap}
+  /* the "+" at the end of each row turns 45 degrees into a close mark while the profile is open */
   .court summary::after{content:"+";font-family:var(--face);font-size:clamp(24px,2.6vw,38px);line-height:1;
     transition:transform .45s var(--ease);color:var(--pale);opacity:.8}
   .court[open] summary::after{transform:rotate(45deg);color:var(--accent)}
@@ -575,13 +604,14 @@
   /* a court with no photos yet: one column of text instead of an empty photo slot */
   .court__body--solo{grid-template-columns:minmax(0,62ch)}
   .court__quote{font-size:clamp(19px,1.75vw,26px);line-height:1.4;font-style:italic;max-width:34ch;margin-bottom:clamp(24px,4vh,40px)}
+  /* the fact sheet: labels in a mono column on the left, answers on the right; one column under 560px */
   .court__facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px clamp(18px,3vw,40px);font-size:16px;align-items:baseline}
   .court__facts dt{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
   /* long unbroken links (such as kikithulukate.carrd.co) may wrap anywhere, so they never run past the fact sheet on a
      320px screen */
   .court__facts dd{margin:0;line-height:1.4;max-width:54ch;overflow-wrap:anywhere}
-  /* the photo plate is sized by width and capped at its column; sized by height it grew wider than the column on tall
-     tablets (1024x1366) and covered the end of the fact sheet */
+  /* the photo plate is sized by width (a 9:16 photo about 74% of the screen tall, plus its frame) and capped at its
+     column, so on tall tablets (1024x1366) it never grows past the column over the end of the fact sheet */
   /* the open profile's polaroid: the 9:16 photo in a paper frame, the name on the bottom edge */
   .court__plate{--pp:clamp(10px,1.1vw,16px);position:relative;align-self:start;justify-self:end;
     width:min(100%,calc(clamp(420px,74vh,760px) * 9 / 16 + 2 * var(--pp)))}
@@ -619,6 +649,7 @@
   .game__tag{font-size:16px;line-height:1.5;color:var(--pale-bright);margin-bottom:10px;max-width:none}   /* each game's one-line summary in full Pearl */
   .game ul{margin:0;padding:0;list-style:none}
   .game li{position:relative;font-size:16px;line-height:1.55;padding-left:18px;margin-bottom:7px;max-width:64ch}
+  /* a faint en dash marks each rule */
   .game li::before{content:"–";position:absolute;left:0;opacity:.45}
   /* chat commands such as /dice, in the rules and in the lead, are set in the mono face on a faint chip */
   .game code,.casino .lead code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.14);padding:1px 5px;white-space:nowrap}
@@ -628,6 +659,7 @@
   .house{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(28px,5vw,80px)}
   .house__left h2{font-size:var(--fs-mega);max-width:11ch}
   .house__left p{margin-top:24px;max-width:44ch;font-size:clamp(17px,1.4vw,21px)}
+  /* the staff in two columns: the name in Bebas on the left, the role in mono on the right */
   .staff{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 clamp(16px,3vw,40px)}
   .staff li{border-top:1px solid var(--line);padding:11px 0;display:flex;justify-content:space-between;gap:12px;align-items:baseline;
     transition:padding-left .35s var(--ease)}
@@ -652,6 +684,7 @@
     .art{grid-template-columns:1fr}
   }
 
+  /* from 900px down the casino quote and the Previous events heading may use the full width */
   @media (max-width:900px){
     .luck blockquote,.events__head h2{max-width:none}
   }
@@ -666,6 +699,7 @@
   @media (max-width:900px){.events__head{grid-template-columns:1fr}.events__next{justify-self:start}}
   .events__head h2{font-size:var(--fs-mega);max-width:10ch}
   .evgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,1.6vw,26px);align-items:start}
+  /* a column of posters; the script moves each column at its own speed as the page scrolls */
   .evcol{display:flex;flex-direction:column;gap:clamp(12px,1.6vw,26px);will-change:transform}
   /* ---------- Upcoming: the next night as a feature card, then the nights further out ---------- */
   .upcoming{position:relative;overflow:hidden;padding:clamp(56px,8vh,110px) var(--gutter) clamp(56px,9vh,110px)}
@@ -676,6 +710,7 @@
     margin-bottom:clamp(34px,6vh,64px)}
   .up__head h2{font-size:var(--fs-mega);max-width:10ch}
   .up__intro{margin:0;max-width:40ch;justify-self:end;font-size:clamp(17px,1.4vw,21px);line-height:1.5;color:var(--mute)}
+  /* the next night: the poster slot on the left, the title, facts and Discord button on the right */
   .up-next{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:clamp(22px,4vw,64px);align-items:center;
     padding:clamp(16px,2.2vw,32px);border:1px solid var(--line);background:linear-gradient(135deg,rgba(101,0,168,.62),rgba(53,0,79,.25) 70%)}
   .up-next__ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;aspect-ratio:16/9;
@@ -705,6 +740,7 @@
     .up__head,.up-next{grid-template-columns:1fr}
     .up__intro{justify-self:start}
   }
+  /* phones show two of the further-out slots side by side; the third is hidden rather than left alone on a row */
   @media (max-width:640px){ .up-more__grid{grid-template-columns:repeat(2,minmax(0,1fr))} .up-card:nth-child(3){display:none} }
 
   /* ---------- rooms: the rate cards, then the sixteen rooms, each a photo slot ---------- */
@@ -714,6 +750,7 @@
   .room{margin:0}
   .room__ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;aspect-ratio:16/9;overflow:hidden;
     background:linear-gradient(160deg,rgba(53,0,79,.7),rgba(53,0,79,.25));border:1px solid var(--line);transition:border-color .35s var(--ease)}
+  /* the logo stands in for each room's photo, dimmed; with a mouse it brightens and grows a little on hover */
   .room__ph img{width:34%;height:auto;opacity:.5;transition:opacity .35s var(--ease),transform .6s var(--ease)}
   .room__ph em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
   .room__cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0;padding-top:9px}
@@ -730,6 +767,7 @@
   .rate{display:flex;flex-direction:column;padding:clamp(22px,2.6vw,38px);background:var(--pale);color:var(--ground);border:1px solid var(--pale)}
   .rate__when{margin:0;opacity:.82}
   .rate__price{margin:clamp(18px,3vh,30px) 0 0;font-family:var(--display);font-size:clamp(58px,6.4vw,112px);line-height:.9;letter-spacing:-.01em;color:var(--red-deep)}
+  /* the unit (/ hour, / week) in small mono, raised beside the price */
   .rate__price i{font-style:normal;font-family:var(--mono);font-size:clamp(14px,1.2vw,18px);letter-spacing:.06em;vertical-align:.5em;margin-left:.2em;color:var(--ground)}
   .rate__what{margin:auto 0 0;padding-top:clamp(18px,3vh,28px);max-width:30ch;font-size:clamp(16px,1.25vw,19px);line-height:1.45}
   .rooms__ask{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 24px;margin-top:clamp(28px,4.5vh,48px);
@@ -738,6 +776,7 @@
   @media (max-width:860px){ .rates{grid-template-columns:1fr} .rate__what{margin-top:0} }
   .ev{margin:0}
   .ev a{display:block;text-decoration:none}
+  /* each poster sits in a Hot Pink frame, and its hover zoom stays inside it */
   .ev__frame{display:block;overflow:hidden;background:var(--violet);clip-path:inset(0 0 0 0);border:2px solid var(--red)}
   /* each poster keeps its own shape (natural height): most are not 16:9, and a fixed 16:9 crop cut off their titles */
   .ev img{width:100%;height:auto;transition:transform .8s var(--ease),filter .5s}
@@ -751,7 +790,7 @@
   /* once the script has flowed the posters into columns: three, or two from 900px down (phones included) */
   .evgrid.is-flowed{grid-template-columns:repeat(var(--cols,3),minmax(0,1fr))}
   .evmore{display:flex;justify-content:center;margin-top:clamp(28px,5vh,56px)}
-  .evmore [hidden]{display:none}
+  .evmore [hidden]{display:none}   /* the pill's own display would otherwise override the hidden attribute */
 
   /* ---------- the viewers: the full-screen dialog shared by the event posters and the court photos ---------- */
   .lb{position:fixed;inset:0;width:100%;height:100%;max-width:100%;max-height:100%;margin:0;border:0;
@@ -772,9 +811,11 @@
   .lb__x:hover,.lb__x:focus-visible{color:var(--accent)}
   .lb__x svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.6}
   .lb__stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:clamp(8px,2vh,20px) 0}
+  /* the image fits the stage whole and fades in once it has loaded (.is-in) */
   .lb__img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;background:var(--violet);
     box-shadow:0 30px 80px rgba(0,0,0,.5);opacity:0;transition:opacity .3s var(--ease)}
   .lb__img.is-in{opacity:1}
+  /* the round previous and next buttons at the stage's left and right edges */
   .lb__nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border-radius:50%;
     border:1px solid var(--line);display:grid;place-items:center;background:rgba(53,0,79,.6);
     transition:background .3s,border-color .3s,color .3s}
@@ -789,6 +830,7 @@
   .lb__tools{display:flex;align-items:center;gap:18px}
   .lb__fill[aria-pressed="true"]{color:var(--accent)}
   .lb.is-fill .lb__img{width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;cursor:grab;touch-action:none}
+  /* the page behind the poster viewer does not scroll while it is open */
   html.lb-open{overflow:hidden}
   html.lb-open body{overflow:hidden}
   @media (max-width:640px){
@@ -805,6 +847,7 @@
   .rv{opacity:1}
   .rv-ready .rv:not(.in){opacity:0}
   .rv.in{animation:rv .8s var(--ease) both}
+  /* d1 to d3 stagger the fade for blocks that arrive together, 80ms apart */
   .rv.in.d1{animation-delay:.08s}
   .rv.in.d2{animation-delay:.16s}
   .rv.in.d3{animation-delay:.24s}
@@ -814,6 +857,8 @@
   .mask{display:block;overflow:visible}
   .mask > span{display:block}
 
+  /* reduced motion: anchors jump instead of scrolling, every animation and transition ends at once, the reveals are
+     never hidden and the hero's stills stand still */
   @media (prefers-reduced-motion: reduce){
     html{scroll-behavior:auto}
     *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
@@ -824,12 +869,14 @@
 </style>
 </head>
 <body class="page-sub page-events">
+<!-- the arrow icon, drawn once and reused by every button and link with <use href="#arrow"> -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="arrow" viewBox="0 0 24 16"><path d="M0 7h19.3l-5.6-5.6L15.5 0 24 8l-8.5 8-1.8-1.4L19.3 9H0z"/></symbol>
 </svg>
 
 <!-- ============ shared chrome, on every page: the skip link, the header with the logo (and the way home on inner pages),
      the Aethernet menu panel and the corner Aethernet button that opens it ============ -->
+<!-- the intro's black screen and video come first (main page only); the skip link jumps to the welcome ticker on the main page and to <main> elsewhere -->
 <a class="skip" href="#top">Skip to content</a>
 
 <header class="hud" id="hud">
@@ -859,6 +906,7 @@
   </nav>
   <div class="panel__foot">
     <a class="pill pill--discord" href="https://discord.gg/7FYG4YVAPg" target="_blank" rel="noopener noreferrer">Join the Discord <svg class="pill__arrow" aria-hidden="true"><use href="#arrow"/></svg></a>
+    <!-- the address, and the hours the script rewrites in the reader's own time zone -->
     <p class="mono" style="color:var(--pale-bright);opacity:.92">Materia · Sephirot · Mist · Ward 6 · Plot 32<br><span id="panelHours">Saturdays</span></p>
     <p class="panel__legal">FINAL FANTASY XIV © 2010–2026 SQUARE ENIX CO., LTD. All rights reserved. A fan venue, not affiliated with Square Enix.</p>
   </div>
@@ -1205,6 +1253,7 @@
 <script>
 (function(){
   'use strict';
+  // shared by every block below: the reader's reduced-motion setting, one- and all-element queries, and a clamp
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var $ = function(s,c){ return (c||document).querySelector(s); };
   var $$ = function(s,c){ return [].slice.call((c||document).querySelectorAll(s)); };
@@ -1224,12 +1273,15 @@
     }else setTimeout(strike,650);
   })();
 
-  /* ---------- 1b. the logo: a looping video wherever it appears (header, hero, menu, placeholders) ---------- */
+  /* ---------- 2. the logo: a looping video wherever it appears (the header, the hero, and the bar and Upcoming placeholders) ---------- */
   // WebKit (Safari, and every browser on iPhone and iPad) shows no WebM alpha: it gets the MP4 on black,
   // screen-blended so the black drops out. Everyone else gets the WebM with real transparency.
+  // WebKit-only browsers: anything on iPhone or iPad (iPadOS reports itself as a Mac with a touch screen), and Safari
+  // on the Mac, whose user agent names Safari but none of the Chromium or Firefox engines
   var ua=navigator.userAgent;
   var webkitOnly=/iPad|iPhone|iPod/.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1) ||
     (/Safari\//.test(ua) && !/Chrome\/|Chromium|Edg\/|OPR\/|Firefox\//.test(ua));
+  // gives a logo video its source (the MP4, screen-blended, on WebKit; the WebM elsewhere); false if it has none
   function armVideo(v){
     if(v.getAttribute('src')) return true;
     var src=webkitOnly ? v.getAttribute('data-mp4') : v.getAttribute('data-webm');
@@ -1239,12 +1291,13 @@
     v.src=src;
     return true;
   }
-  window.__sdArm=armVideo;
+  window.__sdArm=armVideo;   // exposed on window; nothing in this script reads it back
   // Some browsers refuse to autoplay any video, muted or not: LibreWolf out of the box, Firefox or Edge set
   // to block, an iPhone in Low Power Mode. Autoplay blocking does not cover images, so there the logo becomes
   // the animated AVIF cut of the same clip (transparent, same box); nobody else ever downloads it.
   var noAutoplay=false;
   try{ noAutoplay=!!(navigator.getAutoplayPolicy && navigator.getAutoplayPolicy('mediaelement')==='disallowed'); }catch(e){}
+  // replaces a logo video with its animated AVIF in the same box, keeping its id, size and classes (less the screen blend)
   function toImage(v, hold){
     if(!v || v.tagName!=='VIDEO' || !v.parentNode) return v;
     var src=v.getAttribute('data-avif'); if(!src) return v;
@@ -1266,10 +1319,12 @@
       vids.forEach(function(v){ if(!(introOn && v.closest('.hero__logo'))) toImage(v); });
       return;
     }
+    // a play() the browser refuses turns that logo into its animated image
     function play(v){
       var p=v.play();
       if(p && p.catch) p.catch(function(e){ if(e && e.name==='NotAllowedError' && !v.hasAttribute('data-held')) toImage(v); });
     }
+    // whether each logo is on screen: a logo plays only while it is on screen, the tab is visible and the intro is not holding it
     var seen=new WeakMap();
     function sync(v){
       if(v.tagName!=='VIDEO' || !v.parentNode) return;
@@ -1281,10 +1336,11 @@
       vids.forEach(function(v){ io.observe(v); });
     }else vids.forEach(function(v){ seen.set(v,true); sync(v); });
     document.addEventListener('visibilitychange',function(){ vids.forEach(sync); });
+    // the intro's handover calls this to start the hero's loop at once, counting it as on screen until the observer reports
     window.__sdSync=function(v){ if(v.tagName==='VIDEO' && !seen.has(v)) seen.set(v,true); sync(v); };
   })();
 
-  /* ---------- 1c. the intro: main page only, when the reader arrives from outside the site or reloads ---------- */
+  /* ---------- 3. the intro: main page only, when the reader arrives from outside the site or reloads ---------- */
   (function(){
     var root=document.documentElement, box=$('#intro');
     if(!root.classList.contains('intro-on')) return;
@@ -1300,7 +1356,7 @@
       var c=w.cloneNode(true); c.removeAttribute('id'); c.classList.remove('rv','in'); c.setAttribute('aria-hidden','true');
       copies.appendChild(c); return c;
     });
-    var ratio=1168/1020;
+    var ratio=1168/1020;                               // the logo clip's width over its height
     function place(){                                  // every frame until the intro ends: lay the intro video exactly on the hero logo's box
       var r=hero.getBoundingClientRect(), vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
       words.forEach(function(w,i){                     // the title copies follow the real title, which is refitted as fonts arrive
@@ -1319,11 +1375,13 @@
       }
       if(!done) raf=requestAnimationFrame(place);
     }
+    // the black starts to lift and the logo shrinks home; sd:revealed fires once the site shows (sooner on a skip)
     function reveal(){
       if(revealed) return; revealed=true;
       box.classList.add('is-revealing','is-shrinking');
       setTimeout(function(){ dispatchEvent(new Event('sd:revealed')); }, box.classList.contains('is-skipping')?150:2300);
     }
+    // the end of the intro, however it comes: the clip ending, a skip, or a time limit
     function finish(){
       if(done) return; done=true; cancelAnimationFrame(raf);
       reveal();
@@ -1339,6 +1397,7 @@
         setTimeout(go,700);
       }else handover();
     }
+    // the hero's own logo and title take over from the intro's, and the intro is removed
     function handover(){
       hero.removeAttribute('data-held');
       if(hero.tagName==='VIDEO'){ try{ hero.currentTime=0; }catch(e){} if(window.__sdSync) window.__sdSync(hero); }
@@ -1351,6 +1410,7 @@
     // any sign of the reader wanting the page (a click, a scroll, a touch, a key) ends the intro at once
     ['pointerdown','wheel','touchstart','keydown'].forEach(function(t){ addEventListener(t,skip,{capture:true,passive:true}); });
     place();
+    // the clip has started: everything else in the intro is timed from here
     function started(){
       if(t0) return; t0=performance.now(); clearTimeout(deadline);
       dispatchEvent(new Event('sd:intro-start'));      // the title flickers in with the logo
@@ -1384,7 +1444,7 @@
     setTimeout(finish, 9000);                          // and never hold it longer than the clip, whatever happens
   })();
 
-  /* ---------- 2. the wordmark: the name fitted to its frame, "The" aligned to it, the logo's glow placed ---------- */
+  /* ---------- 4. the wordmark: the name fitted to its frame, "The" aligned to it, the logo's glow placed ---------- */
   // rendered width is not exactly linear in font size (rounding, hinting, a fallback face while the display
   // face loads): fit once, then correct against the size that actually renders
   function fitTo(el, measure){
@@ -1396,12 +1456,14 @@
     el.style.fontSize='100px';
     var w=measure(el);
     if(!w){ el.style.width=prevW; el.style.fontSize=prevF; return; }
+    // half a pixel under the exact fit, so rounding never pushes the name past its box; never below 20px
     var size=Math.max(20, avail/w*100-0.5);
     el.style.fontSize=size.toFixed(2)+'px';
     var w2=measure(el);
     if(w2>0) el.style.fontSize=Math.max(20, size*avail/w2-0.5).toFixed(2)+'px';
     el.style.width=prevW||'';
   }
+  // the name's width is its text's own width, measured with a range so the box around it does not count
   function fitWord(el){
     fitTo(el, function(e){
       var range=document.createRange();
@@ -1444,6 +1506,7 @@
   })();
   function fitAll(){ fitWord($('#heroWord')); alignThe(); placeHalo(); }
   fitAll();
+  // refit 140ms after the last resize event rather than on every one
   addEventListener('resize',function(){ clearTimeout(window.__fitT); window.__fitT=setTimeout(fitAll,140); });
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitAll); }
   // the scrollbar appears once the content is in, narrowing the fit box: measure again after it settles
@@ -1458,17 +1521,20 @@
     // while the panel is open the page behind it is inert, so Tab cannot walk out of the panel into links hidden
     // under it; the page is restored before focus goes back to the button that opened it
     var behind=[].slice.call(document.body.children).filter(function(el){ return el!==panel && el.tagName!=='SCRIPT'; });
+    // opens or closes the panel; on closing, focus goes to focusBack (null when a link is taking the reader away)
     function set(open, focusBack){
       panel.classList.toggle('is-open',open);
       [btn,bar].forEach(function(b){ if(b) b.setAttribute('aria-expanded',open?'true':'false'); });
       panel.setAttribute('aria-hidden',open?'false':'true');
       document.body.classList.toggle('is-locked',open);
       behind.forEach(function(el){ el.inert=open; });
+      // opening moves focus into the panel: to the Close button, or failing that to the first link
       if(open && closeBtn) closeBtn.focus();
       else if(open && first) first.focus();
       if(!open && focusBack && focusBack.focus) focusBack.focus();
     }
-    // focus goes back to whichever button opened the panel, if it is still on screen
+    // Close and Escape send focus to whichever Aethernet button is on screen now: the corner button once it is
+    // showing (and on every inner page), otherwise the hero's
     var opener=null;
     function back(){
       return (bar && bar.classList.contains('is-on')) || !btn ? bar : btn;
@@ -1515,7 +1581,7 @@
     }
   })();
 
-  /* ---------- 5b. the hero's Discord invite: solid blue until it has been clicked, remembered in localStorage ---------- */
+  /* ---------- 6. the hero's Discord invite: solid blue until it has been clicked, remembered in localStorage ---------- */
   (function(){
     var d=$('#heroDiscord'); if(!d) return;
     var KEY='sd-discord-clicked';
@@ -1525,7 +1591,7 @@
     d.addEventListener('auxclick',function(e){ if(e.button===1) done(); });   // a middle-click opens the invite too, so it counts
   })();
 
-  /* ---------- 6. reveals: every heading and block fades in once, the first time it is on screen ---------- */
+  /* ---------- 7. reveals: every heading and block fades in once, the first time it is on screen ---------- */
   (function(){
     var els=$$('.rv');
     if(!('IntersectionObserver' in window) || reduce || !els.length){ return; }
@@ -1539,16 +1605,18 @@
     els.forEach(function(el){ io.observe(el); });
   })();
 
-  /* ---------- 10. the poster wall: each poster at its own shape, newest first, placed into the shortest column (three,
+  /* ---------- 8. the poster wall: each poster at its own shape, newest first, placed into the shortest column (three,
      or two from 900px down); the latest twelve until the reader asks for all; the columns drift at different speeds
      as the page scrolls ---------- */
   (function(){
     var grid=$('#evgrid'); if(!grid) return;
+    // wide matches at 900px and narrower, where the wall has two columns
     var SHOW=12, all=false, more=$('#evMore'), wide=matchMedia('(max-width:900px)');
     var idx=function(f){ var a=f.querySelector('a'); return a ? (parseInt(a.getAttribute('data-lb'),10)||0) : 0; };
     var tiles=$$('.ev',grid).sort(function(a,b){ return idx(a)-idx(b); });
     if(!tiles.length) return;
     var ratio=function(f){ var i=f.querySelector('img'); return (+i.getAttribute('height')||9)/(+i.getAttribute('width')||16); };
+    // how far each column drifts up over the wall's pass through the screen, as a share of the screen height
     var cols=[], speeds=[0.05,0.11,0.025];
     function layout(){
       var n=wide.matches?2:3, h=[];
@@ -1565,6 +1633,7 @@
       grid.classList.add('is-flowed');
       paint();
     }
+    // the drift: p runs from 0 as the wall's top enters at the bottom of the screen to 1 as its foot leaves at the top
     function paint(){
       if(reduce) return;
       var r=grid.getBoundingClientRect();
@@ -1582,14 +1651,14 @@
         layout();
         if(!all) more.scrollIntoView({block:'center'});
       });
-    }else{ all=true; }
+    }else{ all=true; }                                 // twelve posters or fewer: all of them show and the button stays hidden
     layout();
     if(wide.addEventListener) wide.addEventListener('change',layout); else if(wide.addListener) wide.addListener(layout);
     addEventListener('scroll',paint,{passive:true});
     addEventListener('resize',paint);
   })();
 
-  /* ---------- 11. deep links (courts.html#name) open that court's profile ---------- */
+  /* ---------- 9. deep links (courts.html#name) open that court's profile ---------- */
   (function(){
     function openHash(){
       var id=location.hash.slice(1); if(!id) return;
@@ -1604,7 +1673,7 @@
     openHash();
   })();
 
-  /* ---------- 12. the hours, in the reader's own time zone: Saturday 8pm to 2am Sydney time, converted ---------- */
+  /* ---------- 10. the hours, in the reader's own time zone: Saturday 8pm to 2am Sydney time, converted ---------- */
   (function(){
     var OPEN_DAY=6, OPEN_MIN=20*60, SYD='Australia/Sydney';
 
@@ -1614,11 +1683,12 @@
         var p={}, f=new Intl.DateTimeFormat('en-US',{timeZone:zone||SYD,hour12:false,year:'numeric',month:'2-digit',
           day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
         f.formatToParts(d).forEach(function(x){ p[x.type]=x.value; });
-        var asUTC=Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute,+p.second);
+        var asUTC=Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute,+p.second);   // %24: some browsers write midnight as hour 24
         return Math.round((asUTC-d.getTime())/60000);
       }catch(e){ return null; }
     }
-    // next Saturday 8pm Sydney wall-clock time as an instant, correct across daylight saving changes
+    // this week's Saturday 8pm, Sydney wall-clock time, as an instant (today's, if it is Saturday in Sydney, even after
+    // opening: only its clock time and weekday are shown). Correct across daylight saving changes
     function nextSaturdayOpen(){
       var now=new Date(), off=offsetMin(now);
       if(off===null) return null;
@@ -1627,6 +1697,7 @@
       var sat=new Date(Date.UTC(wall.getUTCFullYear(),wall.getUTCMonth(),wall.getUTCDate()+add,20,0,0));
       var y=sat.getUTCFullYear(), mo=sat.getUTCMonth(), d=sat.getUTCDate();
       var g=Date.UTC(y,mo,d,20,0,0);
+      // Sydney's offset at 8pm that Saturday can differ from today's: recompute the instant with the offset at the result
       for(var k=0;k<2;k++){ var o=offsetMin(new Date(g)); if(o===null) return null; g=Date.UTC(y,mo,d,20,0,0)-o*60000; }
       return new Date(g);
     }
@@ -1644,10 +1715,10 @@
     var openT='8pm', closeT='2am';
     var openInstant=nextSaturdayOpen();
     if(openInstant){
-      var closeInstant=new Date(openInstant.getTime()+6*3600000);
+      var closeInstant=new Date(openInstant.getTime()+6*3600000);   // the bar closes six hours after it opens
       openT=clock(openInstant); closeT=clock(closeInstant);
-      // the venue opens Saturday 8pm in Sydney; show that instant in the reader's own zone, day included,
-      // because in the Americas it falls on Friday
+      // the venue opens Saturday 8pm in Sydney (09:00 UTC on daylight time, 10:00 UTC on standard time); show that
+      // instant in the reader's own zone, day included, because far enough west of UTC it falls on Friday
       var DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
       var dayName=DAYS[openInstant.getDay()];
       var zone='';
@@ -1655,17 +1726,18 @@
         var zp=new Intl.DateTimeFormat(undefined,{timeZoneName:'short'}).formatToParts(openInstant);
         zp.forEach(function(x){ if(x.type==='timeZoneName') zone=x.value; });
       }catch(e){}
+      // the menu panel shows the day, the times and the zone's short name; the hero shows the times and the day
       var rangeTxt=openT+' – '+closeT+(zone?' '+zone:'');
       var set=function(id,txt){ var el=document.getElementById(id); if(el) el.textContent=txt; };
       set('hoursRange', openT+' – '+closeT+',');
       set('panelHours', dayName+', '+rangeTxt);
-      // the hero's hours line names the day as well: west of UTC-9 it is Friday
+      // the hero's hours line names the day as well: west of UTC-9 (UTC-10 while Sydney is on standard time) it is Friday
       set('hoursEvery', 'every '+dayName);
     }
 
   })();
 
-  /* ---------- 12b. the welcome ticker ----------
+  /* ---------- 11. the welcome ticker ----------
      One set holds the words once for screen readers; copies of the group (hidden from them) pad the set to at least
      the strip's width, then the whole set is doubled and the track slides by half: a seamless loop. The pace is fixed
      in pixels per second, so a phone and a wide screen scroll at the same speed */
@@ -1673,10 +1745,11 @@
     var t=$('#welcome.ticker'); if(!t) return;
     var view=$('.ticker__view',t), track=$('.ticker__track',t), set=$('.ticker__set',t), group=$('.ticker__group',t), btn=$('#tickerToggle');
     if(reduce) return;                                 // under reduced motion the ticker stands still and scrolls by hand
-    var PACE=52, lastW=0;
+    var PACE=52, lastW=0;                              // PACE in pixels per second; lastW is the strip width the loop was built for
     function build(){
       var vw=view.clientWidth; if(!vw) return;
-      if(vw===lastW && track.children.length>1) return; lastW=vw;
+      if(vw===lastW && track.children.length>1) return; lastW=vw;   // same width as last time: the loop already fits
+      // back to one group and one set, then pad and double again for the new width
       while(set.children.length>1) set.removeChild(set.lastChild);
       while(track.children.length>1) track.removeChild(track.lastChild);
       var gw=group.getBoundingClientRect().width; if(!gw) return;
@@ -1686,7 +1759,7 @@
       t.style.setProperty('--tdur',(set.getBoundingClientRect().width/PACE).toFixed(1)+'s');
       t.classList.add('is-running');
     }
-    // the hours module has already written the hours in; build now, and again once the fonts are in
+    // build now, and again once the fonts are in (they change the group's width)
     build();
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ lastW=0; build(); });
     addEventListener('resize',function(){ clearTimeout(t._b); t._b=setTimeout(build,160); });
@@ -1697,7 +1770,7 @@
     });
   })();
 
-  /* ---------- 13. the event posters: the full-screen viewer for every poster on the wall ---------- */
+  /* ---------- 12. the event posters: the full-screen viewer for every poster on the wall ---------- */
   (function(){
     var list=$$('.ev').map(function(fig){
       var img=fig.querySelector('img'), t=fig.querySelector('.ev__t'), d=fig.querySelector('.ev__d'), a=fig.querySelector('a');
@@ -1714,6 +1787,7 @@
           btnX=$('#lbClose'), btnP=$('#lbPrev'), btnN=$('#lbNext');
       var at=0, opener=null;
 
+      // shows the poster at `at`: image, alt text, title, date and counter; it fades in once loaded
       function paint(){
         var it=list[at];
         img.classList.remove('is-in');
@@ -1724,6 +1798,7 @@
         dt.textContent=it.date;
         num.textContent=(at+1)+' / '+list.length;
         if(img.complete) img.classList.add('is-in');
+        // the posters either side are fetched now, so the next step shows at once
         [list[(at+1)%list.length], list[(at-1+list.length)%list.length]].forEach(function(x){
           var p=new Image(); p.src=x.src;
         });
@@ -1737,6 +1812,7 @@
       }
       function shut(){ if(lb.open) lb.close(); }
 
+      // however the viewer closes (the button, Escape, the backdrop), the page scrolls again and focus returns to the poster
       lb.addEventListener('close',function(){
         document.documentElement.classList.remove('lb-open');
         if(opener && opener.focus) opener.focus();
@@ -1761,7 +1837,7 @@
         dragging=false;
         var dx=e.clientX-sx, dy=e.clientY-sy;
         if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){ step(dx<0?1:-1); swiped=true; setTimeout(function(){ swiped=false; },0); }
-        else if(Math.abs(dy)>90 && e.target===lb) shut();
+        else if(Math.abs(dy)>90 && e.target===lb) shut();   // a long vertical swipe on the backdrop closes the viewer
       });
       lb.addEventListener('pointercancel',function(){ dragging=false; });
 
@@ -1775,10 +1851,10 @@
     })();
   })();
 
-  /* ---------- 16. court profiles: one open at a time, animated by the grid row ---------- */
+  /* ---------- 13. court profiles: one open at a time, animated by the grid row ---------- */
   (function(){
     var courts=$$('.court'); if(!courts.length) return;
-    var OPEN=460, CLOSE=340;
+    var OPEN=460, CLOSE=340;                         // the open and close transitions in the CSS (.46s and .34s), in ms
     function wrap(d){ return $('.court__wrap', d); }
     function openCourt(d){
       if(d.open) return;
@@ -1791,6 +1867,7 @@
       void w.offsetHeight;
       w.style.gridTemplateRows='';
     }
+    // closing animates the row back to 0fr first and only then closes the <details>, so the content stays visible as it shrinks
     function closeCourt(d){
       if(!d.open || d.classList.contains('is-closing')) return;
       if(reduce){ d.open=false; return; }
@@ -1806,6 +1883,7 @@
       }, {once:true});
       setTimeout(fin, CLOSE+80);                     // a fallback in case the transitionend event is missed
     }
+    // the other courts that are open or still closing
     function others(d){
       return courts.filter(function(x){ return x!==d && (x.open || x.classList.contains('is-closing')); });
     }
@@ -1825,6 +1903,7 @@
         e.preventDefault();                          // the script runs the toggle; without the script, <details> still opens and closes on its own
         if(d.classList.contains('is-closing')) return;
         var wasOpen=d.open;
+        // is a court that is about to close above this one? Its closing would pull this row up the page
         var above=others(d).some(function(x){ return x.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING; });
         others(d).forEach(closeCourt);               // the previously open court closes first
         if(wasOpen) closeCourt(d); else openCourt(d);
@@ -1832,7 +1911,7 @@
       });
     });
   })();
-  /* ---------- 17. court photos: a slow slideshow on the profile, and a full-screen viewer for the whole set ---------- */
+  /* ---------- 14. court photos: a slow slideshow on the profile, and a full-screen viewer for the whole set ---------- */
   (function(){
     var shots=$$('.court__shot'); if(!shots.length) return;
     var TURN=10000;                              // ten seconds per photo; the .1s crossfade is in the CSS
@@ -1862,6 +1941,7 @@
         btnX=$('#cLbClose'), btnP=$('#cLbPrev'), btnN=$('#cLbNext');
     var list=[], at=0, opener=null, fill=$('#cLbFill'), panX=50;
 
+    // Fill crops the photo to the whole stage; turning it on or off recentres the crop
     function setFill(on){
       lb.classList.toggle('is-fill',on);
       if(fill) fill.setAttribute('aria-pressed',on?'true':'false');
@@ -1879,6 +1959,7 @@
       num.textContent=(at+1)+' / '+list.length;
       if(img.complete) img.classList.add('is-in');
     }
+    // opens the viewer on a court's photos, titled with the court's full name from its row
     function open(btn){
       var court=btn.closest('.court');
       var name=court && $('.court__name',court);
@@ -1905,7 +1986,7 @@
     btnX.addEventListener('click',close);
     btnP.addEventListener('click',function(){ step(-1); });
     btnN.addEventListener('click',function(){ step(1); });
-    lb.addEventListener('cancel',function(e){ e.preventDefault(); close(); });
+    lb.addEventListener('cancel',function(e){ e.preventDefault(); close(); });   // Escape closes through close(), so the page unlocks and focus returns
     lb.addEventListener('keydown',function(e){
       if(e.key==='ArrowLeft'){ e.preventDefault(); step(-1); }
       if(e.key==='ArrowRight'){ e.preventDefault(); step(1); }
@@ -1921,6 +2002,7 @@
     // in Fill mode a drag pans along the photo instead of turning to the next one
     lb.addEventListener('pointermove',function(e){
       if(!dragging || !lb.classList.contains('is-fill')) return;
+      // a drag across the photo's full width moves the crop 220 points along its 0-100% range
       panX=clamp(pan0-(e.clientX-sx)/Math.max(1,img.clientWidth)*220,0,100);
       img.style.objectPosition=panX.toFixed(1)+'% 50%';
     });
@@ -1928,6 +2010,7 @@
       if(!dragging) return;
       dragging=false;
       var dx=e.clientX-sx, dy=e.clientY-sy;
+      // in Fill mode a drag only pans; past 4px it also swallows the click that follows, so a pan never closes the viewer
       if(lb.classList.contains('is-fill')){ if(Math.abs(dx)>4){ swiped=true; setTimeout(function(){ swiped=false; },0); } return; }
       if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){ step(dx<0?1:-1); swiped=true; setTimeout(function(){ swiped=false; },0); }
     });
