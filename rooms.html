@@ -38,9 +38,6 @@
   @font-face{font-family:"Cormorant Den";font-weight:400;font-style:normal;font-display:swap;
     src:url("fonts/CormorantGaramond-latin-ext.woff2") format("woff2");
     unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
-  /* Mrs Saint Delafield (OFL, Google Fonts' latin file, self-hosted): the script hand of the Courts and Staff headings */
-  @font-face{font-family:"Mrs Saint Delafield";font-weight:400;font-style:normal;font-display:swap;
-    src:url("fonts/MrsSaintDelafield-latin.woff2") format("woff2")}
   /* Libron (a build of Newsreader, OFL), the body text face: regular, italic, bold and bold italic. A copy installed on the
      reader's machine is used first, then the woff2 subsets in fonts/ */
   @font-face{font-family:"Libron Den";font-weight:400;font-style:normal;font-display:swap;
@@ -627,15 +624,16 @@
     background-size:100% 100%,200% 100%;
     filter:drop-shadow(calc(var(--px,4px) * -1) calc(var(--py,0px) * -1) 0 rgb(255 70 120/.5)) drop-shadow(var(--px,4px) var(--py,0px) 0 rgb(70 170 255/.45));
     transition:filter .25s cubic-bezier(0,0,.58,1),transform 1.1s var(--ease);animation:prismFlow 8s linear infinite}
-  /* Signature: the word written out in a script hand by a soft-edged mask moving across it, then a Hot Pink flourish
-     drawn underneath. The script runs the mask (--sig, -16% to 104% over 2.2s) when the heading comes into view */
-  .sig{position:relative;display:inline-block;margin:0;font-family:"Mrs Saint Delafield","Libron Den",cursive;font-weight:400;
-    text-transform:none;letter-spacing:0;line-height:1;color:var(--pale)}
-  .letters .sig{font-size:clamp(84px,12vw,210px)}
-  .sig__t{display:inline-block;white-space:nowrap;padding:0 .1em;line-height:1.3;
+  /* Signature: the word written out by a soft-edged mask moving across it, then a Hot Pink flourish drawn underneath,
+     in each heading's own face (the display face for Courts, the mono label for Staff). The script runs the mask
+     (--sig, -16% to 104% over 2.2s) when the heading comes into view */
+  .sig{position:relative;display:inline-block;margin:0;color:var(--pale)}
+  .letters .sig{font-size:var(--fs-mega)}
+  /* the padding (taken back by the margin) gives the mask room past the glyphs' ink, so the tight line height never clips them */
+  .sig__t{display:inline-block;white-space:nowrap;padding:.14em .06em;margin:-.14em -.06em;
     -webkit-mask-image:linear-gradient(to right,#000 var(--sig,104%),transparent calc(var(--sig,104%) + 8%));
     mask-image:linear-gradient(to right,#000 var(--sig,104%),transparent calc(var(--sig,104%) + 8%))}
-  .sig__f{pointer-events:none;position:absolute;left:8%;right:8%;bottom:.02em;height:.3em}
+  .sig__f{pointer-events:none;position:absolute;left:4%;right:4%;top:100%;height:max(.24em,10px);margin-top:max(.04em,3px)}
   .sig__f svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
   /* the flourish draws itself left to right: a clip opening across it (a dash offset breaks on a stretched,
      non-scaling stroke) */
@@ -774,7 +772,7 @@
   /* ---------- the house: the staff, set like the courts (the .court rows above), then the DJs and the art credits ---------- */
   .house-sec .sec__head h2{max-width:11ch}
   .house__label{opacity:.7;margin:0 0 10px}
-  .sig.house__label{opacity:1;font-size:clamp(64px,7vw,120px);margin:0 0 clamp(14px,2vh,26px)}
+  .sig.house__label{margin-bottom:20px}   /* room for the flourish under it */
   .house{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(28px,5vw,80px);align-items:start;
     margin-top:clamp(50px,8vh,90px)}
   .djs{margin-top:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 clamp(16px,3vw,40px)}
@@ -1415,9 +1413,12 @@
   // the name's width is its text's own width, measured with a range so the box around it does not count
   function fitWord(el){
     fitTo(el, function(e){
-      var range=document.createRange();
-      range.selectNodeContents(e);
-      return range.getBoundingClientRect().width;
+      // the words only: the neon's wall glow is a wider absolute span inside the title, and would shrink the fit
+      var ws=e.querySelectorAll('.neon__t'), l=Infinity, r=-Infinity;
+      if(!ws.length){ var range=document.createRange(); range.selectNodeContents(e); return range.getBoundingClientRect().width; }
+      // a range round each word's letters: on phones the words are blocks, as wide as the title
+      for(var i=0;i<ws.length;i++){ var g=document.createRange(); g.selectNodeContents(ws[i]); var b=g.getBoundingClientRect(); l=Math.min(l,b.left); r=Math.max(r,b.right); }
+      return r-l;
     });
   }
   // "The" tops out level with the name's capitals: each word's ink top is its text box's top, plus the
