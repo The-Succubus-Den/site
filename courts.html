@@ -293,8 +293,8 @@
   body.is-locked .menubar{opacity:0;pointer-events:none}
 
   /* the Aethernet menu: the editorial full-screen sheet (after aimran.es's Editorial fullscreen menu). A pane of lightly
-     Midnight-tinted glass over the whole site, so the page stays in view behind it, blurred, with rain on it (section 20 of
-     the script, after motionkitui.com's Rain on Glass). It opens as a circle that grows out of whichever Aethernet button
+     Midnight-tinted glass over the whole site, so the page stays in view behind it, blurred. It opens as a circle that
+     grows out of whichever Aethernet button
      was pressed (the script sets --ox/--oy) and shrinks back into it; the pages are set large in Cormorant on the right,
      numbered at the right edge, and rise one after another; hovering or focusing one dims the rest; the current page is
      Hot Pink italic. The game's copyright notice fades in last along a hairline at the foot, also on the
@@ -315,9 +315,6 @@
   /* on phones the rows cover most of the pane, so the glass is a little thicker there */
   @media (max-width:760px){ .panel{--glass-a:.62;--glass-b:.76} }
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .panel{--glass-a:.9;--glass-b:.94} }
-  /* the rain: one canvas over the whole pane, above the glass and under the rows, the previews and the Close pill */
-  .panel__rain{position:fixed;inset:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none}
-  .panel > nav,.panel__foot{position:relative;z-index:2}
   .panel > nav{margin-top:auto}   /* the list sits at the foot of the sheet, and the top stays reachable when it scrolls */
   /* the toggle: an outlined pill whose label rolls from Menu to Close while its two lines cross into an X. It sits centred
      where the menu opened from, on the Aethernet button that was pressed (--ox/--oy). Fixed and filled, so on a
@@ -1057,8 +1054,6 @@
 </header>
 
 <aside class="panel" id="panel" aria-hidden="true" aria-label="Aethernet">
-  <!-- the rain on the menu's glass, drawn by the script while the menu is open; decoration only -->
-  <canvas class="panel__rain" aria-hidden="true"></canvas>
   <button class="panel__close" id="panelClose" type="button" aria-label="Close the Aethernet">
     <span class="panel__roll" aria-hidden="true"><span>Menu</span><span>Close</span></span>
     <span class="panel__x" aria-hidden="true"><i></i><i></i></span>
@@ -1456,7 +1451,6 @@
     v.src=src;
     return true;
   }
-  window.__sdArm=armVideo;   // exposed on window; nothing in this script reads it back
   // Some browsers refuse to autoplay any video, muted or not: LibreWolf out of the box, Firefox or Edge set
   // to block, an iPhone in Low Power Mode. Autoplay blocking does not cover images, so there the logo becomes
   // the animated AVIF cut of the same clip (transparent, same box); nobody else ever downloads it.
@@ -1675,7 +1669,7 @@
   function fitAll(){ fitWord($('#heroWord')); alignThe(); placeHalo(); }
   fitAll();
   // refit 140ms after the last resize event rather than on every one
-  addEventListener('resize',function(){ clearTimeout(window.__fitT); window.__fitT=setTimeout(fitAll,140); });
+  var fitT; addEventListener('resize',function(){ clearTimeout(fitT); fitT=setTimeout(fitAll,140); });
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitAll); }
   // the scrollbar appears once the content is in, narrowing the fit box: measure again after it settles
   addEventListener('load',function(){ setTimeout(fitAll,400); setTimeout(fitAll,1200); });
@@ -1959,7 +1953,7 @@
     build();
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ lastW=0; build(); });
     addEventListener('resize',function(){ clearTimeout(t._b); t._b=setTimeout(build,160); });
-    btn.addEventListener('click',function(){
+    if(btn) btn.addEventListener('click',function(){
       var paused=t.classList.toggle('is-paused');
       btn.setAttribute('aria-pressed',paused?'true':'false');
       btn.setAttribute('aria-label',paused?'Play the ticker':'Pause the ticker');
@@ -2386,211 +2380,6 @@
         else if(fallback(text)) done();
       });
     });
-  })();
-
-  /* ---------- 20. rain on the menu's glass (after motionkitui.com's Rain on Glass, written fresh from its description):
-     drops land on the tinted pane, and each one is a tiny lens holding a shrunken, upside-down slice of the view beyond
-     the glass, with a dark lower rim and a glint. A script cannot read the live page's pixels, so the view is this page's
-     own menu preview (menu/<page>.webp), over the palette's gradient until it loads. Big drops run down in fits and
-     starts, swallowing the drops in their path, growing, and leaving beads behind; the pointer wipes the glass clear.
-     Resting drops are drawn to a layer that is repainted only when they change; the running ones are drawn every frame.
-     It runs only while the menu is open. Reduced motion: the drops are laid once and stay put, but can still be wiped ---------- */
-  (function(){
-    var panel=$('#panel'), cv=panel && $('.panel__rain',panel);
-    if(!cv || !cv.getContext) return;
-    var ctx=cv.getContext('2d'), layer=document.createElement('canvas'), lctx=layer.getContext('2d');
-    var view=document.createElement('canvas'), vctx=view.getContext('2d');
-    if(!ctx || !lctx || !vctx) return;
-    var TAU=Math.PI*2, W=0, H=0, dpr=1, drops=[], dirty=true, raf=0, last=0, tick=0, rainAcc=0, stopT=0, sizeT=0, seeded=false;
-    var MAXR=20, RUNR=7, WIPE=30;
-    function rnd(a,b){ return a+Math.random()*(b-a); }
-    function isOpen(){ return panel.classList.contains('is-open'); }
-
-    // the view beyond the glass: the open page's preview (on a page outside the menu, like the 404, the main page's)
-    var links=$$('.panel__list a',panel), here=links.indexOf($('.panel__list a[aria-current="page"]',panel));
-    var peek=$$('.panel__peek img',panel)[Math.max(0,here)], shot=new Image(), shotOk=false;
-    function paintView(){
-      // at half size: every lens shrinks it anyway
-      view.width=Math.max(2,Math.round(W/2)); view.height=Math.max(2,Math.round(H/2));
-      var g=vctx.createLinearGradient(0,0,0,view.height);
-      g.addColorStop(0,'#35004F'); g.addColorStop(.55,'#6500A8'); g.addColorStop(1,'#A900C9');
-      vctx.fillStyle=g; vctx.fillRect(0,0,view.width,view.height);
-      if(shotOk){
-        // covering the window and held to its top, the way the page itself sits; a touch brighter, as a lens gathers light
-        var k=Math.max(view.width/shot.naturalWidth,view.height/shot.naturalHeight);
-        vctx.filter='brightness(1.12) saturate(1.1)';
-        vctx.drawImage(shot,(view.width-shot.naturalWidth*k)/2,0,shot.naturalWidth*k,shot.naturalHeight*k);
-        vctx.filter='none';
-      }
-      // seen through the same tinted glass, so a drop over a pale part of the page stays water, not a white disc
-      vctx.fillStyle='rgba(53,0,79,.34)'; vctx.fillRect(0,0,view.width,view.height);
-    }
-    // the shading every drop shares, in a unit circle the drop's own transform scales: a little light in the middle, a dark
-    // rim all round, and a lit crescent low inside, where the drop focuses the light coming through it (on a dark pane that
-    // crescent, the rim and the glint are what make a drop read)
-    function shades(c){
-      var body=c.createRadialGradient(0,-.25,0,0,0,1);
-      body.addColorStop(0,'rgba(255,255,255,.1)'); body.addColorStop(.62,'rgba(255,255,255,0)');
-      body.addColorStop(.86,'rgba(16,0,28,.22)'); body.addColorStop(1,'rgba(8,0,16,.7)');
-      var foot=c.createRadialGradient(0,.62,0,0,.62,.62);
-      foot.addColorStop(0,'rgba(255,222,244,.42)'); foot.addColorStop(.55,'rgba(255,190,230,.16)'); foot.addColorStop(1,'rgba(255,190,230,0)');
-      return {body:body,foot:foot};
-    }
-    var CS=shades(ctx), LS=shades(lctx);
-
-    function size(){
-      var w=cv.clientWidth||innerWidth, h=cv.clientHeight||innerHeight, d=Math.min(window.devicePixelRatio||1,2);
-      if(w===W && h===H && d===dpr && cv.width) return;
-      W=w; H=h; dpr=d;
-      cv.width=layer.width=Math.round(W*dpr); cv.height=layer.height=Math.round(H*dpr);
-      paintView();
-      drops=drops.filter(function(o){ return o.x<W+MAXR && o.y<H+MAXR; });
-      dirty=true;
-    }
-    function drop(x,y,r){ return {x:x,y:y,r:r,v:0,run:false,stall:0,trail:0,wob:Math.random()*TAU}; }
-    // a new drop lands: mostly fine mist, now and then a fat one. Landing on another, the two become one (and once the
-    // glass is full, only those do)
-    function land(full){
-      var r=Math.random()<.66 ? rnd(.7,2) : 2.6+Math.pow(Math.random(),2)*10, x=rnd(0,W), y=rnd(-8,H);
-      for(var i=0;i<drops.length;i++){
-        var o=drops[i], dx=o.x-x, dy=o.y-y, rr=o.r+r;
-        if(dx*dx+dy*dy<rr*rr*.7){ o.r=Math.min(MAXR,Math.sqrt(o.r*o.r+r*r)); if(!o.run) dirty=true; return; }
-      }
-      if(!full){ drops.push(drop(x,y,r)); dirty=true; }
-    }
-    function cap(){ return W*H/2300; }
-    function seed(){ for(var n=0, m=cap()*.62; drops.length<m && n<m*3; n++) land(false); }
-
-    function paint(c,o,S){
-      var r=o.r, x=o.x, y=o.y;
-      c.setTransform(dpr,0,0,dpr,0,0);
-      if(r<1.8){
-        // a bead: too small to hold a picture, just its shadow and a speck of light
-        c.fillStyle='rgba(10,0,20,.42)'; c.beginPath(); c.arc(x,y+r*.35,r,0,TAU); c.fill();
-        c.fillStyle='rgba(255,236,248,.5)'; c.beginPath(); c.arc(x-r*.15,y-r*.2,r*.6,0,TAU); c.fill();
-        return;
-      }
-      var rx=r, ry=r*(o.run?1.2:1.06);
-      c.fillStyle='rgba(10,0,20,.36)'; c.beginPath(); c.ellipse(x,y+ry*.22,rx*1.04,ry,0,0,TAU); c.fill();   // its shadow
-      c.save();
-      c.beginPath(); c.ellipse(x,y,rx,ry,0,0,TAU); c.clip();
-      // the lens: the view around the drop, shrunk into it and turned upside down
-      var s=Math.min(r*4.5,W/2-1,H/2-1), sx=clamp(x-s,0,W-2*s), sy=clamp(y-s,0,H-2*s);
-      c.setTransform(dpr,0,0,-dpr,x*dpr,y*dpr);
-      c.drawImage(view,sx/2,sy/2,s,s,-rx,-ry,2*rx,2*ry);
-      c.setTransform(dpr*rx,0,0,dpr*ry,x*dpr,y*dpr);
-      c.fillStyle=S.body; c.fillRect(-1,-1,2,2);
-      c.fillStyle=S.foot; c.fillRect(-1,-1,2,2);
-      c.restore();
-      // the glint, where the light catches its upper left
-      c.fillStyle='rgba(255,255,255,.9)'; c.beginPath();
-      c.ellipse(x-rx*.3,y-ry*.42,Math.max(.7,rx*.22),Math.max(.5,ry*.13),-.6,0,TAU); c.fill();
-    }
-    function render(){
-      if(dirty){
-        lctx.setTransform(1,0,0,1,0,0); lctx.clearRect(0,0,layer.width,layer.height);
-        for(var i=0;i<drops.length;i++) if(!drops[i].run) paint(lctx,drops[i],LS);
-        dirty=false;
-      }
-      ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); ctx.drawImage(layer,0,0);
-      for(var j=0;j<drops.length;j++) if(drops[j].run) paint(ctx,drops[j],CS);
-    }
-
-    // one step of the weather; returns whether anything running moved
-    function step(dt){
-      var moved=false, running=0, i, o;
-      for(i=0;i<drops.length;i++) if(drops[i].run) running++;
-      tick+=dt;
-      // new drops and new runners arrive in batches about eight times a second, so the resting layer is not repainted every frame
-      if(tick>=.12){
-        rainAcc+=tick*W*H/36000; tick=0;
-        var full=drops.length>=cap();
-        while(rainAcc>=1){ rainAcc-=1; land(full); }
-        for(i=0;i<drops.length && running<10;i++){
-          o=drops[i];
-          if(!o.run && (o.r>13 || (o.r>RUNR && Math.random()<.05))){ o.run=true; o.v=0; o.stall=0; o.trail=0; running++; dirty=true; }
-        }
-      }
-      for(i=drops.length-1;i>=0;i--){
-        o=drops[i];
-        if(!o.run) continue;
-        moved=true;
-        // in fits and starts: now and then it catches on the glass for a moment
-        if(o.stall>0){ o.stall-=dt; continue; }
-        if(Math.random()<dt*1.3){ o.stall=rnd(.08,.55); o.v*=.2; continue; }
-        o.v=Math.min(o.v+420*dt*(o.r/11),60+o.r*18);
-        var dy=o.v*dt; o.y+=dy; o.wob+=dt*3; o.x+=Math.sin(o.wob)*.22;
-        // the beads it leaves behind
-        o.trail+=dy;
-        if(o.trail>o.r*1.3){
-          o.trail=0;
-          if(Math.random()<.55){
-            var b=o.r*rnd(.14,.3);
-            drops.push(drop(o.x+rnd(-.6,.6),o.y-o.r*1.35,b));
-            o.r=Math.sqrt(Math.max(0,o.r*o.r-b*b)); dirty=true;
-          }
-        }
-        // swallowing whatever lies in its path
-        for(var j=drops.length-1;j>=0;j--){
-          var p=drops[j];
-          if(p===o) continue;
-          var ex=p.x-o.x, ey=p.y-o.y, rr=o.r+p.r;
-          if(ey>-o.r*.5 && ex*ex+ey*ey<rr*rr*.64){
-            o.r=Math.min(MAXR,Math.sqrt(o.r*o.r+p.r*p.r*.85));
-            drops.splice(j,1); if(j<i) i--;
-            if(!p.run) dirty=true;
-          }
-        }
-        if(o.y-o.r>H+4){ drops.splice(i,1); continue; }
-        if(o.r<4.2){ o.run=false; dirty=true; }   // spent: it comes to rest as a drop like any other
-      }
-      return moved;
-    }
-    function loop(t){
-      raf=requestAnimationFrame(loop);
-      var dt=last ? Math.min(.05,(t-last)/1000) : 0; last=t;
-      if(step(dt) || dirty) render();
-    }
-    function start(){
-      clearTimeout(stopT);
-      size();
-      if(!seeded){ seeded=true; seed(); }
-      if(!shot.src && peek && peek.getAttribute('data-src')){
-        shot.onload=function(){ shotOk=true; paintView(); dirty=true; render(); };
-        shot.src=peek.getAttribute('data-src');
-      }
-      render();
-      if(!reduce && !raf){ last=0; raf=requestAnimationFrame(loop); }
-    }
-    function stop(){ if(raf){ cancelAnimationFrame(raf); raf=0; } }
-
-    // the pointer wipes a path through the drops, every point along the way between two moves
-    var lx=null, ly=null;
-    function wipe(x,y){
-      var px=lx===null?x:lx, py=ly===null?y:ly, n=Math.max(1,Math.ceil(Math.hypot(x-px,y-py)/8)), hit=false;
-      for(var k=1;k<=n;k++){
-        var cx=px+(x-px)*k/n, cy=py+(y-py)*k/n;
-        for(var i=drops.length-1;i>=0;i--){
-          var o=drops[i], dx=o.x-cx, dy=o.y-cy, rr=WIPE+o.r;
-          if(dx*dx+dy*dy<rr*rr){ drops.splice(i,1); hit=true; }
-        }
-      }
-      lx=x; ly=y;
-      if(hit){ dirty=true; if(!raf) render(); }
-    }
-    panel.addEventListener('pointermove',function(e){ if(isOpen()) wipe(e.clientX,e.clientY); });
-    panel.addEventListener('pointerleave',function(){ lx=ly=null; });
-    panel.addEventListener('pointerdown',function(e){ lx=ly=null; if(isOpen()) wipe(e.clientX,e.clientY); });
-
-    // the menu's own class says when it is open; the rain stops once the pane has closed (its circle takes .75s)
-    new MutationObserver(function(){
-      if(isOpen()) start(); else { clearTimeout(stopT); lx=ly=null; stopT=setTimeout(stop,800); }
-    }).observe(panel,{attributes:true,attributeFilter:['class']});
-    addEventListener('resize',function(){
-      clearTimeout(sizeT);
-      sizeT=setTimeout(function(){ if(isOpen()){ size(); render(); } },140);
-    });
-    if(isOpen()) start();
   })();
 })();
 </script>
