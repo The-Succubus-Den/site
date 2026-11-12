@@ -80,6 +80,10 @@
   body{margin:0;background:var(--ground);color:var(--pale);font:400 var(--fs-body)/1.55 var(--text);overflow-x:hidden;
     -webkit-font-smoothing:antialiased}
   body.is-locked{overflow:hidden}
+  /* while the menu is open, a clear pane just under it catches the pointer: a press that falls outside the circle as it
+     grows lands on the page body (and closes the menu, section 5 of the script) rather than on a link or button behind
+     it. The page behind is also made inert, but only once the circle has opened, since that restyles the whole page */
+  body.is-locked::after{content:"";position:fixed;inset:0;z-index:98}
   h1,h2,h3,h4{margin:0;font-family:var(--display);font-weight:400;line-height:.92;letter-spacing:.005em;text-transform:uppercase;
     font-variant-numeric:lining-nums}   /* lining figures: the display face defaults to old-style figures, where a 3 drops below the baseline */
   p{margin:0}
@@ -1470,40 +1474,62 @@
     // while the panel is open the page behind it is inert, so Tab cannot walk out of the panel into links hidden
     // under it; the page is restored before focus goes back to the button that opened it
     var behind=[].slice.call(document.body.children).filter(function(el){ return el!==panel && el.tagName!=='SCRIPT'; });
-    // opens or closes the panel; on closing, focus goes to focusBack (null when a link is taking the reader away)
+    // opens or closes the panel; on closing, focus goes to focusBack (null when a link is taking the reader away).
+    // Every layout read comes first, then the writes, so the browser restyles the page once rather than after each
+    // read; what would cost the opening a frame (moving focus, making the page behind inert) waits until it is under way
+    var inertT=0;
     function set(open, focusBack){
-      // the sheet opens as a circle from the centre of the button that was pressed (and closes back into it)
-      if(open && focusBack){
-        var r=focusBack.getBoundingClientRect();
-        // moved with transitions off: otherwise the closed circle glides from its old centre (the top right on the
-        // first open, or the other button) and the sheet opens from somewhere along the way
+      clearTimeout(inertT);
+      // the sheet opens as a circle from the centre of the button that was pressed (and closes back into it); the
+      // Close button moves with it (--ox/--oy). Moved with transitions off: otherwise the closed circle glides from its
+      // old centre (the top right on the first open, or the other button) and the sheet opens from somewhere along the way
+      var r=open && focusBack ? focusBack.getBoundingClientRect() : null, pad='';
+      if(r){
         panel.style.transition='none';
         panel.style.setProperty('--ox',(r.left+r.width/2)+'px'); panel.style.setProperty('--oy',(r.top+r.height/2)+'px');
-        void panel.offsetWidth;
-        panel.style.transition='';
       }
-      panel.classList.toggle('is-open',open);
-      if(open && !peeked){ peeked=true; peeks.forEach(function(im){ im.src=im.getAttribute('data-src'); }); }
-      if(!open) peek(-1);
-      // the Close button sits on that same spot; when a row or the foot would fall under it, the sheet's content lifts
-      // clear above it (and the sheet scrolls if it must). shortcut: measured on open only, not on resize while open
+      if(open && panel.style.paddingBottom) panel.style.paddingBottom='';   // a lift left from an earlier open (short screens)
+      // the one layout pass, then the reads while it is clean. The Close button sits where the menu opened from; when
+      // a row or the foot would fall under it, the sheet's content lifts clear above it (and the sheet scrolls if it
+      // must). The rows and foot are laid out while the sheet is hidden, so they can be measured before it opens (the
+      // foot rests 8px low until it fades in, hence the wider allowance above the button). shortcut: measured on open
+      // only, not on resize while open
+      void panel.offsetWidth;
       if(open && closeBtn){
-        panel.scrollTop=0; panel.style.paddingBottom='';
+        panel.scrollTop=0;
         var c=closeBtn.getBoundingClientRect();
         var hit=[].slice.call(panel.querySelectorAll('.panel__list li,.panel__foot > *')).some(function(el){
           var q=el.getBoundingClientRect();
-          return q.right>c.left-12 && q.left<c.right+12 && q.bottom>c.top-12 && q.top<c.bottom+12;
+          return q.right>c.left-12 && q.left<c.right+12 && q.bottom>c.top-20 && q.top<c.bottom+12;
         });
-        if(hit) panel.style.paddingBottom=(panel.clientHeight-c.top+16)+'px';
+        if(hit) pad=(panel.clientHeight-c.top+16)+'px';
       }
+      // then the writes
+      if(r) panel.style.transition='';
+      if(open && pad) panel.style.paddingBottom=pad;
+      panel.classList.toggle('is-open',open);
       [btn,bar].forEach(function(b){ if(b) b.setAttribute('aria-expanded',open?'true':'false'); });
       panel.setAttribute('aria-hidden',open?'false':'true');
       document.body.classList.toggle('is-locked',open);
-      behind.forEach(function(el){ el.inert=open; });
-      // opening moves focus into the panel: to the Close button, or failing that to the first link
-      if(open && closeBtn) closeBtn.focus();
-      else if(open && first) first.focus();
-      if(!open && focusBack && focusBack.focus) focusBack.focus();
+      if(!open){
+        peek(-1);
+        // the page is restored before focus goes back to the button that opened it
+        behind.forEach(function(el){ el.inert=false; });
+        if(focusBack && focusBack.focus) focusBack.focus();
+        return;
+      }
+      if(!peeked){ peeked=true; peeks.forEach(function(im){ im.src=im.getAttribute('data-src'); }); }
+      // focus moves in on the next frame, once the circle has started: to the Close button, or failing that to the
+      // first link. The page behind goes inert once the circle has finished (.75s): that restyles the whole page, and
+      // during the opening it cost a dropped frame
+      requestAnimationFrame(function(){
+        if(!panel.classList.contains('is-open')) return;
+        if(closeBtn) closeBtn.focus({preventScroll:true});
+        else if(first) first.focus({preventScroll:true});
+      });
+      inertT=setTimeout(function(){
+        if(panel.classList.contains('is-open')) behind.forEach(function(el){ el.inert=true; });
+      },760);
     }
     // Close and Escape send focus to whichever Aethernet button is on screen now: the corner button once it is
     // showing (and on every inner page), otherwise the hero's
@@ -1524,6 +1550,22 @@
     });
     addEventListener('keydown',function(e){
       if(e.key==='Escape' && panel.classList.contains('is-open')){ set(false, back()); }
+    });
+
+    // the sheet's backdrop blur is built by the graphics card the first time it is drawn, which cost the first opening
+    // a frame or two. Shortly after load, a full-screen pane with the same blur is drawn for three frames at 1% opacity
+    // (nothing to see), so that work is done before anyone opens the menu
+    addEventListener('load',function(){
+      setTimeout(function(){
+        var cs=getComputedStyle(panel), f=cs.backdropFilter || cs.webkitBackdropFilter;
+        if(!f || f==='none') return;
+        var d=document.createElement('div');
+        d.setAttribute('aria-hidden','true');
+        d.style.cssText='position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.011';
+        d.style.webkitBackdropFilter=f; d.style.backdropFilter=f;
+        document.body.appendChild(d);
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ d.remove(); }); }); });
+      },600);
     });
 
     // inner pages have no hero button: the corner button is simply always on
